@@ -1,0 +1,4 @@
+/say Hello?
+/cast Illuminate 0,0
+/alias Ford Prefect
+/quit

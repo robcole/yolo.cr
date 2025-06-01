@@ -1,0 +1,12 @@
+name: game-server
+version: 0.1.0
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+  uuid:
+    github: crystal-lang/crystal
+
+crystal: 1.0.0
+
+license: MIT

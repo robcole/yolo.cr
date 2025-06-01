@@ -1,0 +1,5 @@
+/say Testing the witness command
+/cast Fireball 5,10
+/alias Test Player
+/witness
+/quit

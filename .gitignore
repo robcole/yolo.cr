@@ -1,0 +1,24 @@
+# Build artifacts
+game_server
+game_client
+*.dwarf
+
+# Dependencies
+/lib/
+/*/lib/
+
+# Game state files (optional - comment out if you want to track them)
+game_state.json
+
+# Crystal cache
+.crystal/
+
+# IDE files
+.vscode/
+.idea/
+
+# MacOS
+.DS_Store
+
+# Backup files
+*_backup/
