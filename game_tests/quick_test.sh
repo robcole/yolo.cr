@@ -47,4 +47,4 @@ echo
 echo "To run the full game:"
 echo "1. Start server: cd ../server && ./game_server"
 echo "2. Start client: cd ../client && ./game_client"
-echo "3. Use commands: /say, /cast, /alias, /witness, /quit"
+echo "3. Use commands: say, cast, alias, witness, quit"

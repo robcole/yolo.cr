@@ -1,5 +1,6 @@
 require "http/web_socket"
 require "json"
+require "./game_client/messages"
 
 module GameClient
   struct ClientState
@@ -54,12 +55,13 @@ module GameClient
         puts "Connection closed: #{reason}"
       end
 
-      # Send UUID for reconnection if we have one
+      # Send connection message
       if uuid = @state.uuid
-        socket.send(uuid)
+        conn_message = ConnectionMessage.new(uuid)
       else
-        socket.send("")
+        conn_message = ConnectionMessage.new
       end
+      socket.send(conn_message.to_json)
 
       puts "Connected to server..."
     rescue ex
@@ -67,43 +69,56 @@ module GameClient
       @connected = false
     end
 
-    def handle_server_message(message : String)
-      puts "DEBUG: Received message: '#{message}'" if message && !message.empty?
+    def handle_server_message(message_json : String)
+      puts "DEBUG: Received JSON: #{message_json}" if message_json && !message_json.empty?
 
-      if message.starts_with?("Welcome! Your UUID:")
-        # Parse UUID from welcome message
-        uuid_part = message.split("UUID: ")[1]?.try(&.split(",")[0]?)
-        if uuid_part
-          @state = ClientState.new(uuid_part, @state.name)
+      begin
+        message = Message.from_json(message_json)
+        case message
+        when WelcomeMessage
+          @state = ClientState.new(message.uuid, @state.name)
           save_state
-          puts message
-        end
-      elsif message.starts_with?("Reconnected! UUID:")
-        puts message
-      elsif message.starts_with?("{") && message.includes?("\"log\"")
-        # This looks like JSON from /witness command - format it nicely
-        begin
-          json = JSON.parse(message)
+          puts "Welcome! Your UUID: #{message.uuid}, Coordinates: [#{message.coordinates[0]}, #{message.coordinates[1]}]"
+        when ReconnectedMessage
+          puts "Reconnected! UUID: #{message.uuid}, Coordinates: [#{message.coordinates[0]}, #{message.coordinates[1]}]"
+        when ErrorMessage
+          puts "Error: #{message.message}"
+        when PlayerActionMessage
+          puts message.message
+        when GameLogMessage
           puts "\n" + "="*50
           puts "GAME LOG (from /witness command)"
           puts "="*50
-          puts json.to_pretty_json
+          # Create a simplified JSON structure for display
+          game_data = {
+            "log"     => message.log,
+            "players" => message.players,
+          }
+          puts game_data.to_pretty_json
           puts "="*50 + "\n"
-        rescue
-          puts "Received game log: #{message}"
+        else
+          puts "Unknown message type received"
         end
-      else
-        puts message
+      rescue ex
+        puts "Failed to parse message: #{ex.message}"
+        puts "Raw message: #{message_json}"
       end
     end
 
-    def send_command(command : String)
+    def send_command(command_line : String)
       return unless @connected
 
       socket = @socket
       return unless socket
 
-      socket.send(command)
+      # Parse command and arguments
+      parts = command_line.split(" ", 2)
+      command = parts[0]
+      arguments = parts[1]?
+
+      # Create and send command message
+      cmd_message = CommandMessage.new(command, arguments)
+      socket.send(cmd_message.to_json)
     rescue
       @connected = false
       puts "Connection lost"
@@ -125,11 +140,11 @@ module GameClient
 
       puts "\nGame Client Connected!"
       puts "Available commands:"
-      puts "  /alias <name> - Set your player name"
-      puts "  /say <message> - Say something to other players"
-      puts "  /cast <spell> <x,y> - Cast a spell at coordinates"
-      puts "  /witness - Get complete game log"
-      puts "  /quit - Disconnect and quit"
+      puts "  alias <name> - Set your player name"
+      puts "  say <message> - Say something to other players"
+      puts "  cast <spell> <x,y> - Cast a spell at coordinates"
+      puts "  witness - Get complete game log"
+      puts "  quit - Disconnect and quit"
       puts ""
 
       loop do
@@ -140,10 +155,10 @@ module GameClient
         command = input.strip
         next if command.empty?
 
-        if command == "/quit"
+        if command == "quit"
           disconnect
           break
-        elsif command.starts_with?("/alias ")
+        elsif command.starts_with?("alias ")
           name = command.split(" ", 2)[1]?
           if name
             @state = ClientState.new(@state.uuid, name)

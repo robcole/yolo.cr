@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Crystal
+      uses: crystal-lang/install-crystal@v1
+      with:
+        crystal: latest
+    
+    - name: Install server dependencies
+      run: cd server && shards install
+    
+    - name: Install client dependencies
+      run: cd client && shards install
+    
+    - name: Run linting on server
+      run: cd server && ./bin/ameba src/
+    
+    - name: Run linting on client
+      run: cd client && ./bin/ameba src/
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Crystal
+      uses: crystal-lang/install-crystal@v1
+      with:
+        crystal: latest
+    
+    - name: Build server
+      run: cd server && shards install && crystal build src/game_server.cr -o game_server
+    
+    - name: Build client
+      run: cd client && shards install && crystal build src/game_client.cr -o game_client
+    
+    - name: Test server connectivity
+      run: |
+        cd server
+        timeout 5s ./game_server &
+        SERVER_PID=$!
+        sleep 2
+        
+        # Test if server is running
+        if curl -s http://localhost:3000 > /dev/null 2>&1; then
+          echo "✅ Server is running and responsive"
+        else
+          echo "❌ Server not responding"
+          exit 1
+        fi
+        
+        # Clean up
+        kill $SERVER_PID 2>/dev/null || true
+        wait $SERVER_PID 2>/dev/null || true
+
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Crystal
+      uses: crystal-lang/install-crystal@v1
+      with:
+        crystal: latest
+    
+    - name: Check server formatting
+      run: |
+        cd server
+        crystal tool format --check src/
+    
+    - name: Check client formatting  
+      run: |
+        cd client
+        crystal tool format --check src/

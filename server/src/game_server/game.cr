@@ -77,15 +77,19 @@ module GameServer
       save_game_state
     end
 
-    def broadcast_message(message : String, exclude_uuid : String? = nil)
+    def broadcast_message(message : PlayerActionMessage, exclude_uuid : String? = nil)
       @players.each do |uuid, socket|
         next if uuid == exclude_uuid
         begin
-          socket.send(message)
+          socket.send(message.to_json)
         rescue
           remove_player(uuid)
         end
       end
+    end
+
+    def send_message_to_player(uuid : String, message : Message)
+      @players[uuid]?.try(&.send(message.to_json))
     end
 
     def cast_spell(caster_uuid : String, spell_name : String, coordinates : Coordinates)
@@ -97,23 +101,36 @@ module GameServer
       save_game_state
     end
 
-    def handle_command(uuid : String, command : String)
-      parts = command.split(" ", 2)
-      cmd = parts[0]?.try(&.downcase)
-      args = parts[1]?
+    def handle_message(uuid : String, message_json : String)
+      message = Message.from_json(message_json)
+      case message
+      when CommandMessage
+        handle_command_message(uuid, message)
+      when ConnectionMessage
+        # Connection messages are handled in the WebSocket handler
+      else
+        send_message_to_player(uuid, ErrorMessage.new("Unknown message type"))
+      end
+    rescue ex
+      Logger.log_command(uuid, "Unknown", "Invalid JSON: #{message_json}")
+      send_message_to_player(uuid, ErrorMessage.new("Invalid message format"))
+    end
 
+    private def handle_command_message(uuid : String, message : CommandMessage)
       player_name = @player_names[uuid]? || @game_state.players[uuid]?.try(&.name) || "Unknown"
-      Logger.log_command(uuid, player_name, command)
+      Logger.log_command(uuid, player_name, "#{message.command} #{message.arguments}".strip)
 
-      case cmd
-      when "/alias"
-        handle_alias_command(uuid, args)
-      when "/say"
-        handle_say_command(uuid, args)
-      when "/cast"
-        handle_cast_command(uuid, args)
-      when "/witness"
+      case message.command.downcase
+      when "alias"
+        handle_alias_command(uuid, message.arguments)
+      when "say"
+        handle_say_command(uuid, message.arguments)
+      when "cast"
+        handle_cast_command(uuid, message.arguments)
+      when "witness"
         handle_witness_command(uuid)
+      else
+        send_message_to_player(uuid, ErrorMessage.new("Unknown command: #{message.command}"))
       end
     end
 
@@ -162,14 +179,14 @@ module GameServer
 
       set_player_name(uuid, args)
       player_name = @player_names[uuid]? || uuid
-      broadcast_message("#{player_name} changed their name to #{args}")
+      broadcast_message(PlayerActionMessage.new("#{player_name} changed their name to #{args}"))
     end
 
     private def handle_say_command(uuid : String, args : String?)
       return if args.nil? || args.empty?
 
       player_name = @player_names[uuid]? || uuid
-      broadcast_message("#{player_name}: #{args}")
+      broadcast_message(PlayerActionMessage.new("#{player_name}: #{args}"))
     end
 
     private def handle_cast_command(uuid : String, args : String?)
@@ -191,14 +208,15 @@ module GameServer
         coordinates = Coordinates.new(x, y)
         cast_spell(uuid, spell_name, coordinates)
         player_name = @player_names[uuid]? || uuid
-        broadcast_message("#{player_name} cast #{spell_name} at #{coordinates}")
+        broadcast_message(PlayerActionMessage.new("#{player_name} cast #{spell_name} at #{coordinates}"))
       else
-        @players[uuid]?.try(&.send("Invalid coordinates"))
+        send_message_to_player(uuid, ErrorMessage.new("Invalid coordinates"))
       end
     end
 
     private def handle_witness_command(uuid : String)
-      @players[uuid]?.try(&.send(@game_state.to_pretty_json))
+      game_log_message = GameLogMessage.new(@game_state.log, @game_state.players)
+      send_message_to_player(uuid, game_log_message)
     end
   end
 end
