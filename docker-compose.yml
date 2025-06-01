@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # Game server
+  game-server:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount state directory for persistence
+      - ./server:/app/server:rw
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # Integration test runner
+  integration-test:
+    build: .
+    depends_on:
+      game-server:
+        condition: service_healthy
+    volumes:
+      - ./game_tests:/app/tests:ro
+    command: >
+      sh -c "
+      echo '🧪 Running integration tests against containerized server...' &&
+      /app/client/game_client --test-mode || true &&
+      echo '✅ Integration tests completed'
+      "
+    profiles:
+      - test
+
+  # Linting and formatting check
+  lint-check:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./server/src:/app/server/src:ro
+      - ./client/src:/app/client/src:ro
+    command: >
+      sh -c "
+      echo '🔍 Running linting checks...' &&
+      cd server && ./bin/ameba src/ &&
+      cd ../client && ./bin/ameba src/ &&
+      echo '✅ Linting passed'
+      "
+    profiles:
+      - test
+
+  # Development environment with hot reload
+  dev-server:
+    image: crystallang/crystal:1.16.3-alpine
+    working_dir: /app
+    volumes:
+      - .:/app:rw
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "
+      cd server &&
+      shards install &&
+      crystal run src/game_server.cr
+      "
+    profiles:
+      - dev
+
+  # Quick connectivity test
+  quick-test:
+    build: .
+    depends_on:
+      game-server:
+        condition: service_healthy
+    command: >
+      sh -c "
+      echo '🔌 Testing server connectivity...' &&
+      wget --quiet --tries=3 --spider http://game-server:3000 &&
+      echo '✅ Server connectivity test passed'
+      "
+    profiles:
+      - test

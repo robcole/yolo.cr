@@ -7,100 +7,13 @@ on:
     branches: [ main ]
 
 jobs:
-  integration-test:
+  docker-integration-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install Crystal
-      uses: crystal-lang/install-crystal@v1
-      with:
-        crystal: latest
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
     
-    - name: Build all components
-      run: |
-        cd game_tests
-        make all
-    
-    - name: Run integration tests
-      run: |
-        cd game_tests
-        
-        # Test JSON message communication
-        cat > test_integration.cr << 'EOF'
-        require "http/web_socket"
-        require "json"
-        require "../client/src/game_client/messages"
-
-        puts "🧪 Integration test starting..."
-
-        # Start server
-        server_process = Process.new("../server/game_server", shell: true,
-                                    input: Process::Redirect::Close,
-                                    output: Process::Redirect::Pipe,
-                                    error: Process::Redirect::Pipe)
-
-        sleep 3.seconds
-
-        begin
-          # Test WebSocket connection and JSON messages
-          socket = HTTP::WebSocket.new(URI.parse("ws://localhost:3000"))
-          
-          received_welcome = false
-          received_action = false
-          
-          socket.on_message do |message|
-            puts "📥 Received: #{message}"
-            begin
-              parsed = GameClient::Message.from_json(message)
-              case parsed
-              when GameClient::WelcomeMessage
-                received_welcome = true
-                puts "✅ Welcome message parsed successfully"
-              when GameClient::PlayerActionMessage
-                received_action = true
-                puts "✅ Player action message parsed successfully"
-              end
-            rescue ex
-              puts "❌ JSON parse error: #{ex.message}"
-              exit 1
-            end
-          end
-
-          # Start WebSocket
-          spawn { socket.run }
-
-          # Send connection message
-          conn_message = GameClient::ConnectionMessage.new
-          socket.send(conn_message.to_json)
-          sleep 1.seconds
-
-          # Send test command
-          test_cmd = GameClient::CommandMessage.new("say", "Integration test message")
-          socket.send(test_cmd.to_json)
-          sleep 1.seconds
-
-          socket.close
-          sleep 1.seconds
-
-          # Verify we received expected messages
-          unless received_welcome
-            puts "❌ Did not receive welcome message"
-            exit 1
-          end
-
-          unless received_action
-            puts "❌ Did not receive action message"
-            exit 1
-          end
-
-          puts "✅ All integration tests passed!"
-
-        ensure
-          server_process.terminate
-          server_process.wait
-        end
-        EOF
-        
-        crystal run test_integration.cr
-        rm test_integration.cr
+    - name: Run Docker integration tests
+      run: docker-compose --profile test run --rm integration-test

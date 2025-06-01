@@ -1,0 +1,28 @@
+# Ignore compiled binaries
+server/game_server
+client/game_client
+
+# Ignore state files
+server/game_state.json
+client/game_state.json
+
+# Ignore Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Ignore development files
+game_tests/
+.git/
+.github/
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore logs
+*.log
+
+# Ignore temporary files
+*.tmp
+.DS_Store
