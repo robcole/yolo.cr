@@ -1,13 +1,8 @@
-# Build artifacts
-game_server
-game_client
-*.dwarf
-
 # Dependencies
 /lib/
 /*/lib/
 
-# Game state files (optional - comment out if you want to track them)
+# Game state files - generated during runtime/testing
 game_state.json
 
 # Crystal cache
