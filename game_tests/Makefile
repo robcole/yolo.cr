@@ -6,6 +6,14 @@ build-server:
 build-client:
 	cd ../client && shards install && crystal build src/game_client.cr -o game_client
 
+lint:
+	cd ../server && ./bin/ameba src/
+	cd ../client && ./bin/ameba src/
+
+format:
+	cd ../server && crystal tool format src/
+	cd ../client && crystal tool format src/
+
 run-server:
 	cd ../server && ./game_server
 
@@ -16,4 +24,4 @@ clean:
 	cd ../server && rm -f game_server game_state.json
 	cd ../client && rm -f game_client game_state.json
 
-.PHONY: all build-server build-client run-server run-client clean
+.PHONY: all build-server build-client lint format run-server run-client clean
