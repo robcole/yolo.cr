@@ -16,7 +16,7 @@ jobs:
       uses: docker/setup-buildx-action@v3
     
     - name: Run linting with Docker
-      run: docker-compose --profile test run --rm lint-check
+      run: docker compose --profile test run --rm lint-check
 
   docker-test:
     runs-on: ubuntu-latest
@@ -27,10 +27,10 @@ jobs:
       uses: docker/setup-buildx-action@v3
     
     - name: Build Docker image
-      run: docker-compose build game-server
+      run: docker compose build game-server
     
     - name: Run connectivity test
-      run: docker-compose --profile test run --rm quick-test
+      run: docker compose --profile test run --rm quick-test
     
     - name: Clean up
-      run: docker-compose down
+      run: docker compose down

@@ -26,25 +26,25 @@ clean:
 
 # Docker targets
 docker-build:
-	cd .. && docker-compose build game-server
+	cd .. && docker compose build game-server
 
 docker-run:
-	cd .. && docker-compose up game-server
+	cd .. && docker compose up game-server
 
 docker-dev:
-	cd .. && docker-compose --profile dev up dev-server
+	cd .. && docker compose --profile dev up dev-server
 
 docker-test:
-	cd .. && docker-compose --profile test run --rm quick-test
+	cd .. && docker compose --profile test run --rm quick-test
 
 docker-lint:
-	cd .. && docker-compose --profile test run --rm lint-check
+	cd .. && docker compose --profile test run --rm lint-check
 
 docker-integration:
-	cd .. && docker-compose --profile test run --rm integration-test
+	cd .. && docker compose --profile test run --rm integration-test
 
 docker-clean:
-	cd .. && docker-compose down --volumes --remove-orphans
+	cd .. && docker compose down --volumes --remove-orphans
 	cd .. && docker system prune -f
 
 # Combined targets
