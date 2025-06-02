@@ -1,5 +1,12 @@
 # Conventions
 
+## Code Structure
+- **Methods should have 5 or fewer lines of code** almost all of the time
+- **Classes should be under 100 lines** whenever possible
+- Break large methods into smaller, focused methods with clear responsibilities
+- Split large classes into multiple smaller classes using composition
+- Use manager classes and helper classes to distribute responsibility
+
 ## Types
 - Only allow types to be nullable when *absolutely* required.
 

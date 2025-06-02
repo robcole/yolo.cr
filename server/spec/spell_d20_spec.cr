@@ -51,28 +51,28 @@ describe "D20 Spell System" do
       new_attrs.speed.should eq(13)
     end
 
-    it "prevents negative attributes by capping at zero" do
+    it "allows negative attributes" do
       initial_attrs = GameServer::CoordinateAttributes.new(
-        luminosity: 5,
         constitution: 3,
         health: 8,
         intelligence: 2,
+        luminosity: 5,
         speed: 6
       )
 
       changes = GameServer::AttributeChanges.new(
-        luminosity: -10,
         constitution: -5,
         health: -15,
         intelligence: -1,
+        luminosity: -10,
         speed: -2
       )
 
       new_attrs = initial_attrs.apply_changes(changes)
-      new_attrs.luminosity.should eq(0)
-      new_attrs.constitution.should eq(0)
-      new_attrs.health.should eq(0)
+      new_attrs.constitution.should eq(-2)
+      new_attrs.health.should eq(-7)
       new_attrs.intelligence.should eq(1)
+      new_attrs.luminosity.should eq(-5)
       new_attrs.speed.should eq(4)
     end
   end
@@ -91,20 +91,27 @@ describe "D20 Spell System" do
       shield_effect = GameServer::SpellFactory.create_effect("shield")
       illuminate_effect = GameServer::SpellFactory.create_effect("illuminate")
       fireball_effect = GameServer::SpellFactory.create_effect("fireball")
+      curse_effect = GameServer::SpellFactory.create_effect("curse")
+      glowup_effect = GameServer::SpellFactory.create_effect("glowup")
 
       shield_effect.type.should eq("Protection")
       illuminate_effect.type.should eq("Light")
       fireball_effect.type.should eq("Damage")
+      curse_effect.type.should eq("Curse")
+      glowup_effect.type.should eq("Enhancement")
 
-      # Each should have different attribute effects
+      # Positive effects should increase attributes
       shield_effect.attribute_changes.constitution.should be > 0
       shield_effect.attribute_changes.health.should be > 0
-
       illuminate_effect.attribute_changes.luminosity.should be > 0
-      illuminate_effect.attribute_changes.intelligence.should be >= 0
+      glowup_effect.attribute_changes.health.should be > 0
+      glowup_effect.attribute_changes.intelligence.should be > 0
 
+      # Negative effects should decrease attributes
       fireball_effect.attribute_changes.health.should be < 0
-      fireball_effect.attribute_changes.constitution.should be <= 0
+      fireball_effect.attribute_changes.constitution.should be < 0
+      curse_effect.attribute_changes.health.should be < 0
+      curse_effect.attribute_changes.constitution.should be < 0
     end
 
     it "creates consistent effects for unknown spells" do
@@ -157,24 +164,44 @@ describe "D20 Spell System" do
       effect.attribute_changes.speed.should eq(0)
     end
 
-    it "fireball spell damages health and constitution but may increase speed" do
+    it "fireball spell damages health and constitution" do
       effect = GameServer::SpellFactory.create_effect("fireball")
 
       effect.attribute_changes.health.should be < 0
-      effect.attribute_changes.constitution.should be <= 0
-      effect.attribute_changes.speed.should be >= 0 # Fight or flight response
-      effect.attribute_changes.luminosity.should eq(0)
+      effect.attribute_changes.constitution.should be < 0
       effect.attribute_changes.intelligence.should eq(0)
+      effect.attribute_changes.luminosity.should eq(0)
+      effect.attribute_changes.speed.should eq(0)
     end
 
-    it "haste spell increases speed but costs constitution" do
+    it "haste spell increases speed" do
       effect = GameServer::SpellFactory.create_effect("haste")
 
       effect.attribute_changes.speed.should be > 0
-      effect.attribute_changes.constitution.should be <= 0
+      effect.attribute_changes.constitution.should eq(0)
       effect.attribute_changes.health.should eq(0)
-      effect.attribute_changes.luminosity.should eq(0)
       effect.attribute_changes.intelligence.should eq(0)
+      effect.attribute_changes.luminosity.should eq(0)
+    end
+
+    it "glowup spell increases health and intelligence" do
+      effect = GameServer::SpellFactory.create_effect("glowup")
+
+      effect.attribute_changes.health.should be > 0
+      effect.attribute_changes.intelligence.should be > 0
+      effect.attribute_changes.constitution.should eq(0)
+      effect.attribute_changes.luminosity.should eq(0)
+      effect.attribute_changes.speed.should eq(0)
+    end
+
+    it "curse spell damages all attributes" do
+      effect = GameServer::SpellFactory.create_effect("curse")
+
+      effect.attribute_changes.constitution.should be < 0
+      effect.attribute_changes.health.should be < 0
+      effect.attribute_changes.intelligence.should be < 0
+      effect.attribute_changes.luminosity.should be < 0
+      effect.attribute_changes.speed.should be < 0
     end
 
     it "wisdom spell increases intelligence" do

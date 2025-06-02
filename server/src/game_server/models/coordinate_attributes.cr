@@ -17,15 +17,13 @@ module GameServer
                    @speed : Int32 = 0)
     end
 
-    # Apply attribute changes from spell effects
     def apply_changes(changes : AttributeChanges) : CoordinateAttributes
       CoordinateAttributes.new(
-        constitution: Math.max(0, @constitution + changes.constitution),
-        health: Math.max(0, @health + changes.health),
-        intelligence: Math.max(0, @intelligence + changes.intelligence),
-        luminosity: Math.max(0, @luminosity + changes.luminosity),
-        speed: Math.max(0, @speed + changes.speed)
-      )
+        constitution: @constitution + changes.constitution,
+        health: @health + changes.health,
+        intelligence: @intelligence + changes.intelligence,
+        luminosity: @luminosity + changes.luminosity,
+        speed: @speed + changes.speed)
     end
 
     def to_s(io)
