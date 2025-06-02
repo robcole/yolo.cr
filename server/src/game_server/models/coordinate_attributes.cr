@@ -30,6 +30,8 @@ module GameServer
   end
 
   struct AttributeChanges
+    include JSON::Serializable
+
     getter luminosity : Int32
     getter constitution : Int32
     getter health : Int32
