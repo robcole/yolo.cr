@@ -3,23 +3,41 @@ version: '3.8'
 services:
   # Game server
   game-server:
-    build: .
+    build: 
+      context: .
+      target: runtime
+      cache_from:
+        - docker.io/robcole/yolo.cr:base-compiler-latest
+        - docker.io/robcole/yolo.cr:latest
+        - docker.io/robcole/yolo.cr:main
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
+        DOCKER_BUILDKIT: "1"
     ports:
       - "3000:3000"
     volumes:
       # Mount state directory for persistence
       - ./server:/app/server:rw
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 45s
     restart: unless-stopped
 
   # Integration test runner
   integration-test:
-    build: .
+    build: 
+      context: .
+      target: runtime
+      cache_from:
+        - docker.io/robcole/yolo.cr:base-compiler-latest
+        - docker.io/robcole/yolo.cr:latest
+        - docker.io/robcole/yolo.cr:main
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
+        DOCKER_BUILDKIT: "1"
     depends_on:
       game-server:
         condition: service_healthy
@@ -38,7 +56,14 @@ services:
   lint-check:
     build:
       context: .
-      target: builder
+      target: compiler
+      cache_from:
+        - docker.io/robcole/yolo.cr:base-compiler-latest
+        - docker.io/robcole/yolo.cr:latest
+        - docker.io/robcole/yolo.cr:main
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
+        DOCKER_BUILDKIT: "1"
     volumes:
       - ./server/src:/app/server/src:ro
       - ./client/src:/app/client/src:ro
@@ -53,8 +78,14 @@ services:
       - test
 
   # Development environment with hot reload
+  # Currently supports AMD64 architecture (Intel Mac/PC, Linux AMD64)
+  # M4 Mac users: Use native Crystal installation via Homebrew for best performance
+  # TODO: ARM64 Docker support when Crystal releases official ARM64 builds
   dev-server:
-    image: crystallang/crystal:1.16.3-alpine
+    build:
+      context: .
+      dockerfile: docker/compiler/Dockerfile
+      target: final
     working_dir: /app
     volumes:
       - .:/app:rw
@@ -71,14 +102,23 @@ services:
 
   # Quick connectivity test
   quick-test:
-    build: .
+    build: 
+      context: .
+      target: runtime
+      cache_from:
+        - docker.io/robcole/yolo.cr:base-compiler-latest
+        - docker.io/robcole/yolo.cr:latest
+        - docker.io/robcole/yolo.cr:main
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
+        DOCKER_BUILDKIT: "1"
     depends_on:
       game-server:
         condition: service_healthy
     command: >
       sh -c "
       echo '🔌 Testing server connectivity...' &&
-      wget --quiet --tries=3 --spider http://game-server:3000 &&
+      curl -f --retry 3 http://game-server:3000 &&
       echo '✅ Server connectivity test passed'
       "
     profiles:

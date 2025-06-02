@@ -3,6 +3,10 @@ require "./game_server/game"
 
 game = GameServer::Game.new
 
+get "/" do
+  "OK"
+end
+
 ws "/" do |socket, _|
   uuid = ""
 
