@@ -1,5 +1,6 @@
 require "uuid"
 require "json"
+require "colorize"
 require "./models/*"
 require "./commands/*"
 require "./handlers/*"
@@ -25,7 +26,20 @@ module GameServer
     def load_game_state : GameState
       if File.exists?(GAME_STATE_FILE)
         content = File.read(GAME_STATE_FILE)
-        GameState.from_json(content)
+        begin
+          GameState.from_json(content)
+        rescue ex : JSON::SerializableError
+          # Handle incompatible game state format
+          timestamp = Time.utc.to_s("%Y%m%d_%H%M%S")
+          backup_file = "#{GAME_STATE_FILE}.backup_#{timestamp}"
+          File.rename(GAME_STATE_FILE, backup_file)
+
+          puts "🚨 DEBUG: Incompatible game state format detected!".colorize(:red).bold
+          puts "📁 Old file backed up as: #{backup_file}".colorize(:yellow)
+          puts "🔄 Starting with fresh game state...".colorize(:green)
+
+          GameState.new
+        end
       else
         GameState.new
       end
@@ -97,8 +111,18 @@ module GameServer
       effect = SpellFactory.create_effect(spell_name)
       spell = Spell.new(caster_uuid, spell_name, effect)
 
+      # Update coordinate attributes
+      current_attributes = @game_state.get_coordinate_attributes(coordinates.x, coordinates.y)
+      new_attributes = current_attributes.apply_changes(effect.attribute_changes)
+      @game_state.set_coordinate_attributes(coordinates.x, coordinates.y, new_attributes)
+
       add_spell_to_log(coord_array, spell)
       save_game_state
+
+      # Log the attribute changes
+      coord_str = "(#{coordinates.x},#{coordinates.y})"
+      log_message = "#{spell_name} at #{coord_str} - Roll: #{effect.dice_roll}, New attributes: #{new_attributes}"
+      Logger.log_command(caster_uuid, "SPELL_ATTRIBUTES", log_message)
     end
 
     def handle_message(uuid : String, message_json : String)
@@ -147,7 +171,7 @@ module GameServer
         @game_state.log << CoordinateLog.new(coord_array, uuid)
       else
         index = @game_state.log.index!(existing_log)
-        @game_state.log[index] = CoordinateLog.new(coord_array, uuid, existing_log.spells_cast)
+        @game_state.log[index] = CoordinateLog.new(coord_array, uuid, existing_log.spells_cast, existing_log.attributes)
       end
     end
 
@@ -168,9 +192,11 @@ module GameServer
       if existing_log
         index = @game_state.log.index!(existing_log)
         new_spells = existing_log.spells_cast + [spell]
-        @game_state.log[index] = CoordinateLog.new(coord_array, existing_log.player, new_spells)
+        current_attrs = @game_state.get_coordinate_attributes(coord_array[0], coord_array[1])
+        @game_state.log[index] = CoordinateLog.new(coord_array, existing_log.player, new_spells, current_attrs)
       else
-        @game_state.log << CoordinateLog.new(coord_array, nil, [spell])
+        current_attrs = @game_state.get_coordinate_attributes(coord_array[0], coord_array[1])
+        @game_state.log << CoordinateLog.new(coord_array, nil, [spell], current_attrs)
       end
     end
 

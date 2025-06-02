@@ -1,0 +1,5 @@
+require "spec"
+require "../src/game_server/models/coordinate_attributes"
+require "../src/game_server/models/spell"
+require "../src/game_server/commands/spell_factory"
+require "../src/game_server/models/game_state"

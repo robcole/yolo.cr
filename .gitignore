@@ -5,6 +5,12 @@
 # Game state files - generated during runtime/testing
 game_state.json
 
+# Crystal binaries
+game_server
+game_server.dwarf
+game_client
+game_client.dwarf
+
 # Crystal cache
 .crystal/
 

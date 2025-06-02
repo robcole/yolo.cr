@@ -1,0 +1,12 @@
+{
+  "type": "Damage",
+  "amount": 25,
+  "dice_roll": 15,
+  "attribute_changes": {
+    "luminosity": 0,
+    "constitution": -2,
+    "health": -5,
+    "intelligence": 0,
+    "speed": 3
+  }
+}
