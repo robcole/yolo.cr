@@ -1,0 +1,218 @@
+{
+  "spells": {
+    "blind": {
+      "name": "blind",
+      "type": "negative",
+      "effect_type": "Blindness",
+      "description": "Reduces luminosity and intelligence",
+      "calculation": {
+        "luminosity": "-min(20, dice_roll * 2)",
+        "intelligence": "-dice_roll"
+      },
+      "amount_calculation": "luminosity + intelligence"
+    },
+    "brighten": {
+      "name": "brighten",
+      "type": "positive",
+      "effect_type": "Brightness",
+      "description": "Increases luminosity",
+      "calculation": {
+        "luminosity": "min(20, dice_roll * 2)"
+      },
+      "amount_calculation": "luminosity"
+    },
+    "confuse": {
+      "name": "confuse",
+      "type": "negative",
+      "effect_type": "Confusion",
+      "description": "Reduces intelligence and constitution",
+      "calculation": {
+        "intelligence": "-dice_roll",
+        "constitution": "-(dice_roll // 2)"
+      },
+      "amount_calculation": "intelligence + constitution"
+    },
+    "curse": {
+      "name": "curse",
+      "type": "negative",
+      "effect_type": "Curse",
+      "description": "Damages all attributes slightly",
+      "calculation": {
+        "constitution": "-max(1, dice_roll // 4)",
+        "health": "-max(1, dice_roll // 4)",
+        "intelligence": "-max(1, dice_roll // 4)",
+        "luminosity": "-max(1, dice_roll // 4)",
+        "speed": "-max(1, dice_roll // 4)"
+      },
+      "amount_calculation": "constitution + health + intelligence + luminosity + speed"
+    },
+    "darken": {
+      "name": "darken",
+      "type": "negative",
+      "effect_type": "Darkness",
+      "description": "Reduces luminosity",
+      "calculation": {
+        "luminosity": "-min(20, dice_roll * 3)"
+      },
+      "amount_calculation": "luminosity"
+    },
+    "drain": {
+      "name": "drain",
+      "type": "negative",
+      "effect_type": "Drain",
+      "description": "Reduces constitution and speed",
+      "calculation": {
+        "constitution": "-dice_roll",
+        "speed": "-dice_roll"
+      },
+      "amount_calculation": "constitution + speed"
+    },
+    "energize": {
+      "name": "energize",
+      "type": "positive",
+      "effect_type": "Energy",
+      "description": "Increases speed and health",
+      "calculation": {
+        "speed": "dice_roll",
+        "health": "dice_roll // 2"
+      },
+      "amount_calculation": "speed + health"
+    },
+    "enlighten": {
+      "name": "enlighten",
+      "type": "positive",
+      "effect_type": "Enlightenment",
+      "description": "Increases intelligence and luminosity",
+      "calculation": {
+        "intelligence": "dice_roll",
+        "luminosity": "dice_roll"
+      },
+      "amount_calculation": "intelligence + luminosity"
+    },
+    "exhaust": {
+      "name": "exhaust",
+      "type": "negative",
+      "effect_type": "Exhaustion",
+      "description": "Reduces speed and health",
+      "calculation": {
+        "speed": "-dice_roll",
+        "health": "-dice_roll"
+      },
+      "amount_calculation": "speed + health"
+    },
+    "fireball": {
+      "name": "fireball",
+      "type": "negative",
+      "effect_type": "Damage",
+      "description": "Damages health and constitution",
+      "calculation": {
+        "health": "-min(20, dice_roll + 5)",
+        "constitution": "-(dice_roll // 2)"
+      },
+      "amount_calculation": "health + constitution"
+    },
+    "glowup": {
+      "name": "glowup",
+      "type": "positive",
+      "effect_type": "Enhancement",
+      "description": "Increases health and intelligence",
+      "calculation": {
+        "health": "dice_roll",
+        "intelligence": "dice_roll"
+      },
+      "amount_calculation": "health + intelligence"
+    },
+    "haste": {
+      "name": "haste",
+      "type": "positive",
+      "effect_type": "Speed",
+      "description": "Increases speed",
+      "calculation": {
+        "speed": "min(20, dice_roll + 10)"
+      },
+      "amount_calculation": "speed"
+    },
+    "heal": {
+      "name": "heal",
+      "type": "positive",
+      "effect_type": "Healing",
+      "description": "Increases health significantly",
+      "calculation": {
+        "health": "min(20, dice_roll * 3)"
+      },
+      "amount_calculation": "health"
+    },
+    "illuminate": {
+      "name": "illuminate",
+      "type": "positive",
+      "effect_type": "Light",
+      "description": "Increases luminosity and intelligence",
+      "calculation": {
+        "luminosity": "min(20, dice_roll + 5)",
+        "intelligence": "dice_roll // 2"
+      },
+      "amount_calculation": "luminosity"
+    },
+    "poison": {
+      "name": "poison",
+      "type": "negative",
+      "effect_type": "Poison",
+      "description": "Damages health over time effect",
+      "calculation": {
+        "health": "-min(20, dice_roll * 2)"
+      },
+      "amount_calculation": "health"
+    },
+    "shield": {
+      "name": "shield",
+      "type": "positive",
+      "effect_type": "Protection",
+      "description": "Increases constitution and health",
+      "calculation": {
+        "constitution": "dice_roll",
+        "health": "dice_roll"
+      },
+      "amount_calculation": "constitution + health"
+    },
+    "slow": {
+      "name": "slow",
+      "type": "negative",
+      "effect_type": "Slowness",
+      "description": "Reduces speed significantly",
+      "calculation": {
+        "speed": "-min(20, dice_roll + 10)"
+      },
+      "amount_calculation": "speed"
+    },
+    "strengthen": {
+      "name": "strengthen",
+      "type": "positive",
+      "effect_type": "Strength",
+      "description": "Increases constitution",
+      "calculation": {
+        "constitution": "min(20, dice_roll + 8)"
+      },
+      "amount_calculation": "constitution"
+    },
+    "weaken": {
+      "name": "weaken",
+      "type": "negative",
+      "effect_type": "Weakness",
+      "description": "Reduces constitution significantly",
+      "calculation": {
+        "constitution": "-min(20, dice_roll + 8)"
+      },
+      "amount_calculation": "constitution"
+    },
+    "wisdom": {
+      "name": "wisdom",
+      "type": "positive",
+      "effect_type": "Knowledge",
+      "description": "Increases intelligence",
+      "calculation": {
+        "intelligence": "min(20, dice_roll * 2)"
+      },
+      "amount_calculation": "intelligence"
+    }
+  }
+}
