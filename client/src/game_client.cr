@@ -78,7 +78,8 @@ module GameClient
         when WelcomeMessage
           @state = ClientState.new(message.uuid, @state.name)
           save_state
-          puts "Welcome! Your UUID: #{message.uuid}, Coordinates: [#{message.coordinates[0]}, #{message.coordinates[1]}]"
+          coords = "[#{message.coordinates[0]}, #{message.coordinates[1]}]"
+          puts "Welcome! Your UUID: #{message.uuid}, Coordinates: #{coords}"
         when ReconnectedMessage
           puts "Reconnected! UUID: #{message.uuid}, Coordinates: [#{message.coordinates[0]}, #{message.coordinates[1]}]"
         when ErrorMessage

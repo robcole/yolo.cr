@@ -1,7 +1,47 @@
 # Conventions
 
+## Code Structure
+- **Methods should have 5 or fewer lines of code** almost all of the time
+- **Classes should be under 100 lines** whenever possible
+- Break large methods into smaller, focused methods with clear responsibilities
+- Split large classes into multiple smaller classes using composition
+- Use manager classes and helper classes to distribute responsibility
+
 ## Types
 - Only allow types to be nullable when *absolutely* required.
+
+## Code Formatting
+- **ALWAYS** run Crystal formatter before saving Crystal code: `crystal tool format src/ spec/`
+- Crystal formatter must be run on all `.cr` files to ensure consistent code style
+- This is enforced in CI and will cause builds to fail if not followed
+
+### Line Length and Formatting Rules
+- **Maximum line length: 120 characters** for all Crystal and TypeScript files
+- When breaking long lines into multiple lines:
+  - Each parameter/variable should be on its own line for readability
+  - Use proper indentation to align continuation lines
+  - Break at logical points (commas, operators, etc.)
+- **Example of proper line breaking:**
+  ```crystal
+  def initialize(@constitution : Int32 = 0,
+                 @health : Int32 = 0,
+                 @intelligence : Int32 = 0,
+                 @luminosity : Int32 = 0,
+                 @speed : Int32 = 0)
+  ```
+
+### Variable Ordering
+- **Alphabetize parameters in initializers** wherever possible
+- **Alphabetize getter declarations** to match initializer parameter order
+- **Alphabetize named arguments** in method calls when practical
+- This improves code readability and reduces merge conflicts
+
+## Output Formatting
+- **ALWAYS** use built-in Colorize module for console output formatting: https://crystal-lang.org/api/1.16.3/Colorize.html
+- Add `require "colorize"` to source files (no shard dependency needed - it's built into Crystal)
+- Use `.colorize(:color)` and `.bold` methods for better user experience
+- Prefer Colorize module over raw ANSI escape codes
+- **NEVER** add colorize as a shard dependency - use the built-in module only
 
 # Development Workflow
 

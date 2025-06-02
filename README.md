@@ -149,13 +149,65 @@ All communication uses structured JSON messages with type discrimination:
 }
 ```
 
-## 🧙‍♂️ Spell System
+## 🎲 D20 Spell System
 
-Different spells have different effects:
+The game features a comprehensive D20-based spell system where each spell cast rolls a 20-sided die to determine effectiveness. All coordinates start with 0 in all attributes and can have negative values.
 
-- **Illuminate** - Creates light (effect: Light, amount: 10)
-- **Fireball** - Deals damage (effect: Damage, amount: 25) 
-- **Shield** - Increases health (effect: IncreaseHealth, amount: 42)
+### Coordinate Attributes
+
+Each coordinate has 5 attributes that start at 0:
+- **Constitution**: Physical durability and stamina
+- **Health**: Life force and vitality
+- **Intelligence**: Mental acuity and magical power
+- **Luminosity**: Light and visibility
+- **Speed**: Movement and agility
+
+### Attribute Example
+
+```
+coordinate: 0,0 starts with all attributes at 0
+spell cast: fireball (-6 health, -3 constitution)
+result: 0,0 is now at -6 health, -3 constitution
+
+spell cast: glowup (+15 health, +15 intelligence)  
+result: 0,0 is now at +9 health, -3 constitution, +15 intelligence
+```
+
+### Available Spells (20 Total)
+
+#### ✨ Positive Spells (10)
+- **shield** - Increases constitution and health
+- **illuminate** - Increases luminosity and intelligence
+- **haste** - Increases speed
+- **wisdom** - Increases intelligence
+- **heal** - Significantly increases health
+- **strengthen** - Increases constitution  
+- **brighten** - Increases luminosity
+- **energize** - Increases speed and health
+- **enlighten** - Increases intelligence and luminosity
+- **glowup** - Increases health and intelligence
+
+#### 💀 Negative Spells (10)
+- **fireball** - Damages health and constitution
+- **curse** - Damages all attributes slightly
+- **drain** - Reduces constitution and speed
+- **blind** - Reduces luminosity and intelligence
+- **poison** - Damages health significantly
+- **weaken** - Reduces constitution significantly
+- **slow** - Reduces speed significantly
+- **confuse** - Reduces intelligence and constitution
+- **darken** - Reduces luminosity
+- **exhaust** - Reduces speed and health
+
+### D20 Mechanics
+
+Each spell:
+1. Rolls a D20 die (1-20)
+2. Calculates effects based on the roll
+3. Applies positive or negative changes to coordinate attributes
+4. Stores the complete spell effect in game state
+
+Higher rolls generally result in more powerful effects!
 
 ## 🏗️ Architecture Support
 
@@ -262,25 +314,56 @@ The project includes GitHub Actions workflows that automatically:
     {
       "coordinates": [106, -125],
       "player": "3164b377-e413-4ccd-97e4-3787d32bb9df",
-      "spells_cast": []
+      "spells_cast": [],
+      "attributes": {
+        "constitution": 0,
+        "health": 0,
+        "intelligence": 0,
+        "luminosity": 0,
+        "speed": 0
+      }
     },
     {
       "coordinates": [0, 0],
       "spells_cast": [
         {
           "cast_by": "3164b377-e413-4ccd-97e4-3787d32bb9df",
-          "spell_name": "Illuminate",
+          "spell_name": "glowup",
           "effect": {
-            "type": "Light",
-            "amount": 10
+            "type": "Enhancement",
+            "amount": 30,
+            "dice_roll": 15,
+            "attribute_changes": {
+              "constitution": 0,
+              "health": 15,
+              "intelligence": 15,
+              "luminosity": 0,
+              "speed": 0
+            }
           }
         }
-      ]
+      ],
+      "attributes": {
+        "constitution": 0,
+        "health": 15,
+        "intelligence": 15,
+        "luminosity": 0,
+        "speed": 0
+      }
     }
   ],
   "players": {
     "3164b377-e413-4ccd-97e4-3787d32bb9df": {
       "name": "Ford Prefect"
+    }
+  },
+  "coordinate_attributes": {
+    "0,0": {
+      "constitution": 0,
+      "health": 15,
+      "intelligence": 15,
+      "luminosity": 0,
+      "speed": 0
     }
   }
 }

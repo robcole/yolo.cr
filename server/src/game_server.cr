@@ -20,7 +20,7 @@ ws "/" do |socket, _|
           if reconnect_uuid = conn_message.uuid
             if game.reconnect_player(socket, reconnect_uuid)
               uuid = reconnect_uuid
-              coords = game.player_positions[uuid]
+              coords = game.player_manager.player_positions[uuid]
               response = GameServer::ReconnectedMessage.new(uuid, [coords.x, coords.y])
               socket.send(response.to_json)
             else
@@ -31,7 +31,7 @@ ws "/" do |socket, _|
                 socket.send(error.to_json)
                 socket.close
               else
-                coords = game.player_positions[uuid]
+                coords = game.player_manager.player_positions[uuid]
                 response = GameServer::WelcomeMessage.new(uuid, [coords.x, coords.y])
                 socket.send(response.to_json)
               end
@@ -44,7 +44,7 @@ ws "/" do |socket, _|
               socket.send(error.to_json)
               socket.close
             else
-              coords = game.player_positions[uuid]
+              coords = game.player_manager.player_positions[uuid]
               response = GameServer::WelcomeMessage.new(uuid, [coords.x, coords.y])
               socket.send(response.to_json)
             end

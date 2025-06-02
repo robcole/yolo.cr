@@ -1,0 +1,11 @@
+{
+  "coordinates": [42, 42],
+  "spells_cast": [],
+  "attributes": {
+    "luminosity": 10,
+    "constitution": 15,
+    "health": 20,
+    "intelligence": 12,
+    "speed": 8
+  }
+}

@@ -1,4 +1,5 @@
 require "json"
+require "./coordinate_attributes"
 
 module GameServer
   struct SpellEffect
@@ -6,8 +7,10 @@ module GameServer
 
     getter type : String
     getter amount : Int32
+    getter dice_roll : Int32
+    getter attribute_changes : AttributeChanges
 
-    def initialize(@type : String, @amount : Int32)
+    def initialize(@type : String, @amount : Int32, @dice_roll : Int32, @attribute_changes : AttributeChanges)
     end
   end
 
