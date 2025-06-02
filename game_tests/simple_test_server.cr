@@ -8,30 +8,30 @@ ws "/" do |socket|
 
   socket.on_message do |message|
     puts "Received: #{message}"
-    
+
     if message.starts_with?("/witness")
       test_log = {
         "log" => [
           {
             "coordinates" => [0, 0],
-            "player" => "test-uuid-123",
+            "player"      => "test-uuid-123",
             "spells_cast" => [
               {
-                "cast_by" => "test-uuid-123",
+                "cast_by"    => "test-uuid-123",
                 "spell_name" => "Shield",
-                "effect" => {
-                  "type" => "IncreaseHealth",
-                  "amount" => 42
-                }
-              }
-            ]
-          }
+                "effect"     => {
+                  "type"   => "IncreaseHealth",
+                  "amount" => 42,
+                },
+              },
+            ],
+          },
         ],
         "players" => {
           "test-uuid-123" => {
-            "name" => "Test Player"
-          }
-        }
+            "name" => "Test Player",
+          },
+        },
       }
       socket.send test_log.to_json
     elsif message.starts_with?("/say")

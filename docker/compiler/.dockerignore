@@ -1,3 +1,6 @@
+# Dockerignore for base compiler image build
+# Include only what's needed for dependency compilation
+
 # Ignore compiled binaries
 server/game_server
 server/game_server.dwarf
@@ -8,19 +11,15 @@ client/game_client.dwarf
 server/game_state.json
 client/game_state.json
 
-# Ignore cache and temporary directories
+# Ignore source code (not needed for base compiler)
+server/src/
+client/src/
+
+# Ignore cache and temporary directories (will be recreated)
 server/lib/
 client/lib/
 **/.shards/
 **/node_modules/
-
-# Ignore Docker files themselves
-Dockerfile
-docker-compose*.yml
-.dockerignore
-
-# Ignore docker subdirectory (used for base compiler builds)
-docker/
 
 # Ignore development files
 game_tests/

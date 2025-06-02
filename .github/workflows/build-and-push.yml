@@ -1,0 +1,134 @@
+name: Build and Push Container
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Check if base compiler needs to be built
+  check-base-compiler:
+    runs-on: ubuntu-latest
+    outputs:
+      needs-build: ${{ steps.check.outputs.needs-build }}
+      compiler-tag: ${{ steps.check.outputs.compiler-tag }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Check if base compiler image exists
+      id: check
+      run: |
+        COMPILER_HASH="${{ hashFiles('**/shard.yml', '**/shard.lock', 'docker/compiler/**') }}"
+        COMPILER_TAG="base-compiler-${COMPILER_HASH}"
+        echo "compiler-tag=${COMPILER_TAG}" >> $GITHUB_OUTPUT
+        
+        # Check if image exists on Docker Hub
+        if docker manifest inspect docker.io/robcole/yolo.cr:${COMPILER_TAG} >/dev/null 2>&1; then
+          echo "needs-build=false" >> $GITHUB_OUTPUT
+          echo "✅ Base compiler image exists: ${COMPILER_TAG}"
+        else
+          echo "needs-build=true" >> $GITHUB_OUTPUT
+          echo "🔨 Base compiler image needs to be built: ${COMPILER_TAG}"
+        fi
+
+  # Build base compiler if needed
+  build-base-compiler:
+    runs-on: ubuntu-latest
+    needs: check-base-compiler
+    if: needs.check-base-compiler.outputs.needs-build == 'true'
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+    
+    - name: Build and push base compiler image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/compiler/Dockerfile
+        platforms: linux/amd64
+        # TODO: Add linux/arm64 when Crystal has official ARM64 support
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.check-base-compiler.outputs.compiler-tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-compiler-latest
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-compiler-${{ github.sha }}
+        cache-from: |
+          type=gha,scope=base-compiler
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-compiler-latest
+        cache-to: |
+          type=gha,mode=max,scope=base-compiler
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-compiler-latest,mode=max
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+
+  # Build minimal runtime image using base compiler
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [check-base-compiler, build-base-compiler]
+    if: always() && (needs.build-base-compiler.result == 'success' || needs.build-base-compiler.result == 'skipped')
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push minimal runtime image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        target: runtime
+        platforms: linux/amd64
+        # TODO: Add linux/arm64 when Crystal has official ARM64 support
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: |
+          type=gha,scope=base-compiler
+          type=gha,scope=runtime
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.check-base-compiler.outputs.compiler-tag }}
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:base-compiler-latest
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+        cache-to: |
+          type=gha,mode=max,scope=runtime
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+          BASE_COMPILER_TAG=${{ needs.check-base-compiler.outputs.compiler-tag }}
