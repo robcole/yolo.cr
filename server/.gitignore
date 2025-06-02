@@ -1,0 +1,28 @@
+# Dependencies
+/lib/
+/*/lib/
+
+# Game state files - generated during runtime/testing
+game_state.json
+**/game_state.json
+game_state_*.json
+**/game_state_*.json
+
+# Crystal binaries
+game_server
+game_server.dwarf
+game_client
+game_client.dwarf
+
+# Crystal cache
+.crystal/
+
+# IDE files
+.vscode/
+.idea/
+
+# MacOS
+.DS_Store
+
+# Backup files
+*_backup/
