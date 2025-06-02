@@ -3,6 +3,11 @@
 ## Types
 - Only allow types to be nullable when *absolutely* required.
 
+## Code Formatting
+- **ALWAYS** run Crystal formatter before saving Crystal code: `crystal tool format src/ spec/`
+- Crystal formatter must be run on all `.cr` files to ensure consistent code style
+- This is enforced in CI and will cause builds to fail if not followed
+
 # Development Workflow
 
 ## Pull Request Requirements

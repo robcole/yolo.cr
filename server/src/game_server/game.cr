@@ -97,8 +97,16 @@ module GameServer
       effect = SpellFactory.create_effect(spell_name)
       spell = Spell.new(caster_uuid, spell_name, effect)
 
+      # Update coordinate attributes
+      current_attributes = @game_state.get_coordinate_attributes(coordinates.x, coordinates.y)
+      new_attributes = current_attributes.apply_changes(effect.attribute_changes)
+      @game_state.set_coordinate_attributes(coordinates.x, coordinates.y, new_attributes)
+
       add_spell_to_log(coord_array, spell)
       save_game_state
+
+      # Log the attribute changes
+      Logger.log_command(caster_uuid, "SPELL_ATTRIBUTES", "#{spell_name} at (#{coordinates.x},#{coordinates.y}) - Roll: #{effect.dice_roll}, New attributes: #{new_attributes}")
     end
 
     def handle_message(uuid : String, message_json : String)
