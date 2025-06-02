@@ -157,6 +157,51 @@ Different spells have different effects:
 - **Fireball** - Deals damage (effect: Damage, amount: 25) 
 - **Shield** - Increases health (effect: IncreaseHealth, amount: 42)
 
+## 🏗️ Architecture Support
+
+### Current Status
+- **Production Deployment**: AMD64 Linux (Intel/AMD processors)
+- **Development**: AMD64 + ARM64 (Intel Mac, M1/M2/M4 Mac)
+- **Docker Images**: AMD64 only (Crystal limitation)
+
+### M4 Mac Development Setup (Recommended)
+
+For the best development experience on M4 Mac (ARM64), install Crystal natively:
+
+```bash
+# Install Crystal on macOS (native ARM64 support)
+brew install crystal
+
+# Run development server
+cd server
+crystal run src/game_server.cr
+
+# Run client
+cd client  
+crystal run src/game_client.cr
+
+# Run linting
+cd server && crystal tool format src/ && ./bin/ameba src/
+cd client && crystal tool format src/ && ./bin/ameba src/
+```
+
+### Intel Mac/PC Development
+
+Use Docker for a consistent environment:
+
+```bash
+# Development server
+docker compose --profile dev up dev-server
+
+# Run tests
+docker compose --profile test up lint-check
+```
+
+### Future ARM64 Docker Support
+
+ARM64 Docker images will be added when Crystal releases official ARM64 builds.
+Track progress: https://github.com/crystal-lang/crystal/issues/8401
+
 ## 🧪 Development & Testing
 
 ### Docker Commands (Recommended)
@@ -201,9 +246,11 @@ cd game_tests
 The project includes GitHub Actions workflows that automatically:
 
 - **Docker-based CI**: Uses precompiled binaries in containers (no Crystal setup required)
+- **Container Registry**: Builds and caches images on Docker Hub (`robcole/yolo.cr`)
 - **Lint Code**: Run ameba on all source files using Docker
 - **Build Test**: Ensure both server and client compile using Docker
 - **Integration Test**: End-to-end JSON message communication testing using Docker
+- **Performance Optimization**: Pre-built binaries for 50-80% faster CI execution
 
 ## 📊 Game State Persistence
 

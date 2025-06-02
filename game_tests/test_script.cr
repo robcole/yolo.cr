@@ -11,7 +11,7 @@ unless File.exists?("server/game_server")
   exit 1
 end
 
-# Check if client executable exists  
+# Check if client executable exists
 unless File.exists?("client/game_client")
   puts "ERROR: Client executable not found. Run 'make build-client' first."
   exit 1
@@ -30,7 +30,7 @@ puts "1. Start server: cd server && ./game_server"
 puts "2. In another terminal, start client: cd client && ./game_client"
 puts "3. Run the following commands in the client:"
 puts "   /say Hello?"
-puts "   /cast Illuminate 0,0"  
+puts "   /cast Illuminate 0,0"
 puts "   /alias Ford Prefect"
 puts "   /quit"
 puts "4. Stop the server (Ctrl+C)"
